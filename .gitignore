@@ -1,0 +1,140 @@
+# =============================================================================
+# MISCELÁNEOS
+# =============================================================================
+*.class
+*.log
+*.pyc
+*.swp
+*.lock
+*.orig
+*.old
+*.tmp
+*.bak
+*.backup
+.DS_Store
+Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# =============================================================================
+# IDE Y EDITORES
+# =============================================================================
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+.ideal/
+android/local.properties
+android/*.iml
+android/.idea/
+android/.gradle/
+
+# VS Code (descomenta si NO quieres subir configuración de VS Code)
+.vscode/
+.history/
+*.code-workspace
+
+# Xcode
+**/ios/*.xcworkspace/xcuserdata/
+**/ios/*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+**/ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/ios/*.xcodeproj/xcuserdata/
+**/ios/Flutter/Generated.xcconfig
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Podfile.lock
+**/ios/Pods/
+
+# Visual Studio
+.vs/
+
+# =============================================================================
+# FLUTTER / DART
+# =============================================================================
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-version
+.pub-cache/
+.pub/
+.pub-data/
+build/
+coverage/
+.symbols
+*.lock
+flutter_*.png
+screenshot.png
+
+# =============================================================================
+# NATIVO POR PLATAFORMA
+# =============================================================================
+# Android (se debe subir la estructura, NO los build)
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/captures/
+android/gradle/wrapper/gradle-wrapper.jar
+android/gradlew
+android/gradlew.bat
+android/.gradle/
+android/local.properties
+
+# iOS (subir estructura, NO builds)
+**/ios/Flutter/App.framework/
+**/ios/Flutter/Flutter.framework/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/ephemeral/
+**/ios/.symlinks/
+**/ios/Pods/
+**/ios/Podfile.lock
+
+# macOS
+**/macos/Flutter/Flutter.framework/
+**/macos/Flutter/Flutter.podspec
+**/macos/Flutter/GeneratedPluginRegistrant.*
+**/macos/Podfile.lock
+**/macos/Pods/
+
+# Web
+/web/
+
+# Windows
+/windows/
+
+# Linux
+/linux/
+
+# =============================================================================
+# ARCHIVOS DEL PROYECTO (subir solo código fuente)
+# =============================================================================
+# NO subir carpetas completas de assets si tienen modelos grandes (opcional)
+# assets/models/*.glb
+# assets/models/*.gltf
+
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.cert
+secrets.json
+
+# =============================================================================
+# EXCEPCIONES - ESTOS ARCHIVOS SÍ DEBEN SUBIRSE
+# =============================================================================
+# !.gitignore
+# !README.md
+# !pubspec.yaml
+# !analysis_options.yaml
+# !lib/
+# !assets/
+# !test/

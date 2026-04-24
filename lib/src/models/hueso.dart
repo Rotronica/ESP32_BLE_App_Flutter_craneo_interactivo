@@ -1,0 +1,229 @@
+import 'package:flutter/material.dart';
+
+class HuesoCraneo {
+  final int id;
+  final String nombre;
+  final String nombreCientifico;
+  final String descripcion;
+  final String datoCurioso;
+  final Color color;
+
+  const HuesoCraneo({
+    required this.id,
+    required this.nombre,
+    required this.nombreCientifico,
+    required this.descripcion,
+    required this.datoCurioso,
+    required this.color,
+  });
+}
+
+const List<HuesoCraneo> huesosCraneo = [
+  HuesoCraneo(
+    id: 1,
+    nombre: 'Frontal',
+    nombreCientifico: 'Os frontale',
+    descripcion:
+        'Forma la frente y la parte superior de las órbitas oculares. Contiene los senos frontales.',
+    datoCurioso:
+        'Es el hueso que más varía entre diferentes personas, dando características únicas a cada rostro.',
+    color: Color(0xFFFFDCA0),
+  ),
+  HuesoCraneo(
+    id: 2,
+    nombre: 'Parietal Derecho',
+    nombreCientifico: 'Os parietale dextrum',
+    descripcion:
+        'Forma la parte superior y lateral del cráneo. Se articula con el hueso parietal izquierdo.',
+    datoCurioso:
+        'En la antigüedad, se usaba para hacer trepanaciones (agujeros para liberar "espíritus malignos").',
+    color: Color(0xFFFF0000),
+  ),
+  HuesoCraneo(
+    id: 3,
+    nombre: 'Parietal Izquierdo',
+    nombreCientifico: 'Os parietale sinistrum',
+    descripcion: 'Forma la parte superior y lateral izquierda del cráneo.',
+    datoCurioso: 'Es uno de los huesos más resistentes del cuerpo humano.',
+    color: Color(0xFF00FF00),
+  ),
+  HuesoCraneo(
+    id: 4,
+    nombre: 'Temporal Derecho',
+    nombreCientifico: 'Os temporale dextrum',
+    descripcion:
+        'Protege el oído interno y forma la fosa temporal. Contiene el conducto auditivo.',
+    datoCurioso:
+        'Es el hueso que alberga el martillo, yunque y estribo (los huesos más pequeños del cuerpo).',
+    color: Color(0xFF0000FF),
+  ),
+  HuesoCraneo(
+    id: 5,
+    nombre: 'Temporal Izquierdo',
+    nombreCientifico: 'Os temporale sinistrum',
+    descripcion:
+        'Hueso par que protege estructuras del oído y articulación temporomandibular.',
+    datoCurioso:
+        'La apófisis mastoides (bulto detrás de la oreja) tarda años en desarrollarse completamente.',
+    color: Color(0xFF00FFFF),
+  ),
+  HuesoCraneo(
+    id: 6,
+    nombre: 'Occipital',
+    nombreCientifico: 'Os occipitale',
+    descripcion:
+        'Forma la parte posterior e inferior del cráneo. Contiene el foramen magno.',
+    datoCurioso:
+        'El agujero magno es por donde pasa la médula espinal conectándose con el cerebro.',
+    color: Color(0xFFFF00FF),
+  ),
+  HuesoCraneo(
+    id: 7,
+    nombre: 'Esfenoides',
+    nombreCientifico: 'Os sphenoidale',
+    descripcion:
+        'Hueso con forma de mariposa o murciélago. Conecta casi todos los huesos del cráneo.',
+    datoCurioso:
+        'Es el hueso más complejo del cráneo, con forma de mariposa y agujeros para nervios y arterias.',
+    color: Color(0xFFFFA500),
+  ),
+  HuesoCraneo(
+    id: 8,
+    nombre: 'Etmoides',
+    nombreCientifico: 'Os ethmoidale',
+    descripcion:
+        'Hueso poroso que forma parte de la cavidad nasal y las órbitas oculares.',
+    datoCurioso:
+        'Su nombre viene del griego "ethmós" (criba) porque tiene muchos agujeros pequeños.',
+    color: Color(0xFFFFFF00),
+  ),
+  HuesoCraneo(
+    id: 9,
+    nombre: 'Mandíbula',
+    nombreCientifico: 'Mandíbula',
+    descripcion:
+        'Único hueso móvil del cráneo. Permite la masticación y el habla.',
+    datoCurioso:
+        'Es el hueso más fuerte de la cara y el segundo más resistente del cuerpo después del fémur.',
+    color: Color(0xFFC80000),
+  ),
+  HuesoCraneo(
+    id: 10,
+    nombre: 'Maxilar Derecho',
+    nombreCientifico: 'Maxilla dextra',
+    descripcion:
+        'Forma el maxilar superior. Contiene los dientes superiores y el paladar duro.',
+    datoCurioso: 'Es el hueso facial más grande después de la mandíbula.',
+    color: Color(0xFFFF69B4),
+  ),
+  HuesoCraneo(
+    id: 11,
+    nombre: 'Maxilar Izquierdo',
+    nombreCientifico: 'Maxilla sinistra',
+    descripcion: 'Hueso par que forma la arcada dental superior izquierda.',
+    datoCurioso:
+        'Las dos mitades del maxilar se fusionan alrededor de los 4-6 meses de vida fetal.',
+    color: Color(0xFFFFB6C1),
+  ),
+  HuesoCraneo(
+    id: 12,
+    nombre: 'Cigomático Derecho',
+    nombreCientifico: 'Os zygomaticum dextrum',
+    descripcion:
+        'Forma el pómulo derecho. Da estructura y anclaje a músculos faciales.',
+    datoCurioso:
+        'También se le llama "malar" y su forma define en gran parte la estructura facial.',
+    color: Color(0xFF800080),
+  ),
+  HuesoCraneo(
+    id: 13,
+    nombre: 'Cigomático Izquierdo',
+    nombreCientifico: 'Os zygomaticum sinistrum',
+    descripcion: 'Forma el pómulo izquierdo y parte de la órbita ocular.',
+    datoCurioso:
+        'Es el hueso más prominente de la cara, por eso es el que más se fractura en accidentes.',
+    color: Color(0xFFEE82EE),
+  ),
+  HuesoCraneo(
+    id: 14,
+    nombre: 'Nasal Derecho',
+    nombreCientifico: 'Os nasale dextrum',
+    descripcion: 'Forma el puente de la nariz derecha.',
+    datoCurioso:
+        'Son los huesos más pequeños de la cara y los que más varían entre etnias.',
+    color: Color(0xFFCD853F),
+  ),
+  HuesoCraneo(
+    id: 15,
+    nombre: 'Nasal Izquierdo',
+    nombreCientifico: 'Os nasale sinistrum',
+    descripcion: 'Forma el puente de la nariz izquierda.',
+    datoCurioso:
+        'La mayoría de las fracturas nasales ocurren en la unión de estos dos huesos.',
+    color: Color(0xFFA0522D),
+  ),
+  HuesoCraneo(
+    id: 16,
+    nombre: 'Lagrimal Derecho',
+    nombreCientifico: 'Os lacrimale dextrum',
+    descripcion:
+        'Hueso diminuto en la pared medial de la órbita. Contiene el conducto lagrimal.',
+    datoCurioso: 'Es el hueso más frágil y pequeño del cuerpo humano.',
+    color: Color(0xFF7FFFD4),
+  ),
+  HuesoCraneo(
+    id: 17,
+    nombre: 'Lagrimal Izquierdo',
+    nombreCientifico: 'Os lacrimale sinistrum',
+    descripcion: 'Hueso par que alberga el sistema de drenaje de lágrimas.',
+    datoCurioso: 'Si se fractura, puede causar lagrimeo constante.',
+    color: Color(0xFF40E0D0),
+  ),
+  HuesoCraneo(
+    id: 18,
+    nombre: 'Palatino Derecho',
+    nombreCientifico: 'Os palatinum dextrum',
+    descripcion: 'Forma parte del paladar duro y la fosa pterigopalatina.',
+    datoCurioso:
+        'Tiene forma de "L" y participa en el techo de la boca y en el suelo de la órbita.',
+    color: Color(0xFFFFD700),
+  ),
+  HuesoCraneo(
+    id: 19,
+    nombre: 'Palatino Izquierdo',
+    nombreCientifico: 'Os palatinum sinistrum',
+    descripcion: 'Hueso par que forma la parte posterior del paladar duro.',
+    datoCurioso:
+        'La úvula (campanilla) se inserta en el borde posterior del paladar duro.',
+    color: Color(0xFFC0C0C0),
+  ),
+  HuesoCraneo(
+    id: 20,
+    nombre: 'Cornete Derecho',
+    nombreCientifico: 'Concha nasalis inferior dextra',
+    descripcion:
+        'Estructura ósea en forma de concha en la cavidad nasal derecha.',
+    datoCurioso:
+        'Ayuda a humidificar y calentar el aire que respiras, además de filtrar partículas.',
+    color: Color(0xFFFA8072),
+  ),
+  HuesoCraneo(
+    id: 21,
+    nombre: 'Cornete Izquierdo',
+    nombreCientifico: 'Concha nasalis inferior sinistra',
+    descripcion: 'Concha nasal inferior izquierda, independiente del etmoides.',
+    datoCurioso:
+        'Es el único cornete que es un hueso independiente, los demás son parte del etmoides.',
+    color: Color(0xFFFF7F50),
+  ),
+  HuesoCraneo(
+    id: 22,
+    nombre: 'Vómer',
+    nombreCientifico: 'Vomer',
+    descripcion:
+        'Hueso delgado que forma el tabique nasal inferior y posterior.',
+    datoCurioso:
+        'Su nombre en latín significa "reja de arado" por su forma característica.',
+    color: Color(0xFFFFF8DC),
+  ),
+];
