@@ -22,9 +22,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final BleService _bleService = BleService();
   final List<HuesoCraneo> _huesos = huesosCraneo;
   HuesoCraneo? _selectedHueso;
-  int _servoAngle = 90;
+  int _servoAngle = 35;
   List<ScanResult> _scanResults = [];
   bool _isScanning = false;
+  bool _is3DModelLoaded = false;
 
   late final StreamSubscription<List<ScanResult>> _scanSubscription;
   late final StreamSubscription<bool> _scanningSubscription;
@@ -32,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // No inicializar el controlador 3D inmediatamente para evitar bloqueo
     _initializePermissionsAndBLE();
     _scanSubscription = _bleService.scanResultsStream.listen((results) {
       setState(() {
@@ -65,6 +67,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _scanningSubscription.cancel();
     _bleService.dispose();
     super.dispose();
+  }
+
+  void _load3DModel() {
+    setState(() {
+      _is3DModelLoaded = true;
+    });
+    debugPrint('Modelo 3D activado');
   }
 
   Future<void> _selectHueso(HuesoCraneo hueso) async {
@@ -156,15 +165,68 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(24),
             child: Stack(
               children: [
-                // Intenta mostrar el modelo 3D
-                ModelViewer(
-                  src: 'assets/models/craneo.glb',
-                  alt: 'Modelo 3D del cráneo',
-                  autoRotate: true,
-                  cameraControls: true,
-                  backgroundColor: Colors.black,
-                  ar: false,
-                ),
+                // Modelo 3D con ModelViewer
+                if (_is3DModelLoaded)
+                  ModelViewer(
+                    backgroundColor: Colors.transparent,
+                    src: 'assets/models/CraneoOBJ.glb',
+                    alt: 'Modelo 3D del cráneo humano',
+                    ar: true,
+                    arModes: ['scene-viewer', 'webxr', 'quick-look'],
+                    autoRotate: true,
+                    cameraControls: true,
+                    disableZoom: false,
+                    loading: Loading.eager,
+                  )
+                else
+                  // Placeholder con botón para cargar el modelo
+                  Container(
+                    color: Colors.black54,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.view_in_ar,
+                            color: Colors.deepPurple,
+                            size: 64,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Modelo 3D no cargado',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Presiona el botón para cargar el cráneo 3D',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: _load3DModel,
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('Cargar Modelo 3D'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurple,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 // Overlay con información del hueso seleccionado
                 Positioned(
                   top: 12,
@@ -288,10 +350,15 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: 12,
+                  left: 0,
+                  right: 0,
+                  bottom: MediaQuery.of(context).padding.bottom + 20,
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 12),
                     _buildModelSection(),
                     const SizedBox(height: 20),
                     // Dropdown para seleccionar huesos

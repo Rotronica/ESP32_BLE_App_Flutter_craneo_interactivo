@@ -47,7 +47,7 @@ class ServoControl extends StatelessWidget {
           Slider(
             value: servoAngle.toDouble(),
             min: 0,
-            max: 180,
+            max: 35, // Es el rango maximo que puede abrir la mandíbula física
             divisions: 180,
             activeColor: Colors.orange,
             inactiveColor: Colors.white24,
