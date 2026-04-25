@@ -32,84 +32,117 @@ class HuesoCraneo {
 // Esta lista se puede modificar para agregar, quitar o cambiar huesos
 // Los IDs deben ser únicos y consecutivos para los comandos Bluetooth
 const List<HuesoCraneo> huesosCraneo = [
-  // Hueso Frontal - ID 1
+  // Hueso Temporal Izquierdo - ID 1
   HuesoCraneo(
     id: 1,
-    nombre: 'Frontal',
-    nombreCientifico: 'Os frontale',
-    descripcion:
-        'Forma la frente y la parte superior de las órbitas oculares. Contiene los senos frontales.',
-    datoCurioso:
-        'Es el hueso que más varía entre diferentes personas, dando características únicas a cada rostro.',
-    color: Color(0xFFFFDCA0), // Color crema claro
-  ),
-  // Hueso Parietal Derecho - ID 2
-  HuesoCraneo(
-    id: 2,
-    nombre: 'Parietal Derecho',
-    nombreCientifico: 'Os parietale dextrum',
-    descripcion:
-        'Forma la parte superior y lateral del cráneo. Se articula con el hueso parietal izquierdo.',
-    datoCurioso:
-        'En la antigüedad, se usaba para hacer trepanaciones (agujeros para liberar "espíritus malignos").',
-    color: Color(0xFFFF0000), // Color rojo
-  ),
-  // Hueso Parietal Izquierdo - ID 3
-  HuesoCraneo(
-    id: 3,
-    nombre: 'Parietal Izquierdo',
-    nombreCientifico: 'Os parietale sinistrum',
-    descripcion: 'Forma la parte superior y lateral izquierda del cráneo.',
-    datoCurioso: 'Es uno de los huesos más resistentes del cuerpo humano.',
-    color: Color(0xFF00FF00), // Color verde
-  ),
-  // Hueso Temporal Derecho - ID 4
-  HuesoCraneo(
-    id: 4,
-    nombre: 'Temporal Derecho',
-    nombreCientifico: 'Os temporale dextrum',
-    descripcion:
-        'Protege el oído interno y forma la fosa temporal. Contiene el conducto auditivo.',
-    datoCurioso:
-        'Es el hueso que alberga el martillo, yunque y estribo (los huesos más pequeños del cuerpo).',
-    color: Color(0xFF0000FF), // Color azul
-  ),
-  // Hueso Temporal Izquierdo - ID 5
-  HuesoCraneo(
-    id: 5,
     nombre: 'Temporal Izquierdo',
     nombreCientifico: 'Os temporale sinistrum',
     descripcion:
         'Hueso par que protege estructuras del oído y articulación temporomandibular.',
     datoCurioso:
         'La apófisis mastoides (bulto detrás de la oreja) tarda años en desarrollarse completamente.',
+    color: Color(0xFFFFDCA0), // Color crema claro
+  ),
+  // Hueso Cigomático Izquierdo - ID 2
+  HuesoCraneo(
+    id: 2,
+    nombre: 'Cigomático Izquierdo',
+    nombreCientifico: 'Os zygomaticum sinistrum',
+    descripcion: 'Forma el pómulo izquierdo y parte de la órbita ocular.',
+    datoCurioso:
+        'Es el hueso más prominente de la cara, por eso es el que más se fractura en accidentes.',
+    color: Color(0xFFFF0000), // Color rojo
+  ),
+  // Hueso Maxilar Izquierdo - ID 3
+  HuesoCraneo(
+    id: 3,
+    nombre: 'Maxilar Izquierdo y derecho',
+    nombreCientifico: 'Maxilla sinistra',
+    descripcion:
+        'Los huesos maxilares izquierdo y derecho son estructuras pares y simétricas que forman la parte superior de la boca, el paladar y el suelo de la órbita, uniéndose en la línea media. Albergan los dientes superiores y los senos maxilares, cavidades aéreas importantes para la respiración y la resonancia de la voz',
+    datoCurioso:
+        'Las dos mitades del maxilar se fusionan alrededor de los 4-6 meses de vida fetal.',
+    color: Color(0xFF00FF00), // Color verde
+  ),
+  // Hueso Cigomático Derecho - ID 4
+  HuesoCraneo(
+    id: 4,
+    nombre: 'Cigomático Derecho',
+    nombreCientifico: 'Os zygomaticum dextrum',
+    descripcion:
+        'Forma el pómulo derecho. Da estructura y anclaje a músculos faciales.',
+    datoCurioso:
+        'También se le llama "malar" y su forma define en gran parte la estructura facial.',
+    color: Color(0xFF0000FF), // Color azul
+  ),
+  // Hueso Temporal Derecho - ID 5
+  HuesoCraneo(
+    id: 5,
+    nombre: 'Temporal Derecho',
+    nombreCientifico: 'Os temporale dextrum',
+    descripcion:
+        'Protege el oído interno y forma la fosa temporal. Contiene el conducto auditivo.',
+    datoCurioso:
+        'Es el hueso que alberga el martillo, yunque y estribo (los huesos más pequeños del cuerpo).',
     color: Color(0xFF00FFFF), // Color cian
   ),
-  // Hueso Occipital - ID 6
+  // Hueso Esfenoides - ID 6
   HuesoCraneo(
     id: 6,
-    nombre: 'Occipital',
-    nombreCientifico: 'Os occipitale',
-    descripcion:
-        'Forma la parte posterior e inferior del cráneo. Contiene el foramen magno.',
-    datoCurioso:
-        'El agujero magno es por donde pasa la médula espinal conectándose con el cerebro.',
-    color: Color(0xFFFF00FF), // Color magenta
-  ),
-  // Hueso Esfenoides - ID 7
-  HuesoCraneo(
-    id: 7,
     nombre: 'Esfenoides',
     nombreCientifico: 'Os sphenoidale',
     descripcion:
         'Hueso con forma de mariposa o murciélago. Conecta casi todos los huesos del cráneo.',
     datoCurioso:
         'Es el hueso más complejo del cráneo, con forma de mariposa y agujeros para nervios y arterias.',
+    color: Color(0xFFFF00FF), // Color magenta
+  ),
+  // Hueso Occipital - ID 7
+  HuesoCraneo(
+    id: 7,
+    nombre: 'Occipital',
+    nombreCientifico: 'Os occipitale',
+    descripcion:
+        'Forma la parte posterior e inferior del cráneo. Contiene el foramen magno.',
+    datoCurioso:
+        'El agujero magno es por donde pasa la médula espinal conectándose con el cerebro.',
     color: Color(0xFFFFA500),
   ),
-  // Hueso Etmoides - ID 8
+  // Hueso Parietal Derecho - ID 8
   HuesoCraneo(
     id: 8,
+    nombre: 'Parietal Derecho',
+    nombreCientifico: 'Os parietale dextrum',
+    descripcion:
+        'Forma la parte superior y lateral del cráneo. Se articula con el hueso parietal izquierdo.',
+    datoCurioso:
+        'En la antigüedad, se usaba para hacer trepanaciones (agujeros para liberar "espíritus malignos").',
+    color: Color(0xFFFFFF00), // Color amarillo
+  ),
+  // Hueso Parietal Izquierdo - ID 9
+  HuesoCraneo(
+    id: 9,
+    nombre: 'Parietal Izquierdo',
+    nombreCientifico: 'Os parietale sinistrum',
+    descripcion: 'Forma la parte superior y lateral izquierda del cráneo.',
+    datoCurioso: 'Es uno de los huesos más resistentes del cuerpo humano.',
+    color: Color(0xFFC80000), // Color rojo oscuro
+  ),
+  // Hueso Frontal - ID 10
+  HuesoCraneo(
+    id: 10,
+    nombre: 'Frontal',
+    nombreCientifico: 'Os frontale',
+    descripcion:
+        'Forma la frente y la parte superior de las órbitas oculares. Contiene los senos frontales.',
+    datoCurioso:
+        'Es el hueso que más varía entre diferentes personas, dando características únicas a cada rostro.',
+    color: Color(0xFFFF69B4), // Color rosa fuerte
+  ),
+
+  /*/ Hueso Etmoides - ID 11
+  HuesoCraneo(
+    id: 11,
     nombre: 'Etmoides',
     nombreCientifico: 'Os ethmoidale',
     descripcion:
@@ -118,9 +151,9 @@ const List<HuesoCraneo> huesosCraneo = [
         'Su nombre viene del griego "ethmós" (criba) porque tiene muchos agujeros pequeños.',
     color: Color(0xFFFFFF00), // Color amarillo
   ),
-  // Hueso Mandíbula - ID 9
+  // Hueso Mandíbula - ID 12
   HuesoCraneo(
-    id: 9,
+    id: 12,
     nombre: 'Mandíbula',
     nombreCientifico: 'Mandíbula',
     descripcion:
@@ -129,9 +162,9 @@ const List<HuesoCraneo> huesosCraneo = [
         'Es el hueso más fuerte de la cara y el segundo más resistente del cuerpo después del fémur.',
     color: Color(0xFFC80000), // Color rojo oscuro
   ),
-  // Hueso Maxilar Derecho - ID 10
+  // Hueso Maxilar Derecho - ID 13
   HuesoCraneo(
-    id: 10,
+    id: 13,
     nombre: 'Maxilar Derecho',
     nombreCientifico: 'Maxilla dextra',
     descripcion:
@@ -139,37 +172,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso: 'Es el hueso facial más grande después de la mandíbula.',
     color: Color(0xFFFF69B4), // Color rosa fuerte
   ),
-  // Hueso Maxilar Izquierdo - ID 11
-  HuesoCraneo(
-    id: 11,
-    nombre: 'Maxilar Izquierdo',
-    nombreCientifico: 'Maxilla sinistra',
-    descripcion: 'Hueso par que forma la arcada dental superior izquierda.',
-    datoCurioso:
-        'Las dos mitades del maxilar se fusionan alrededor de los 4-6 meses de vida fetal.',
-    color: Color(0xFFFFB6C1), // Color rosa claro
-  ),
-  // Hueso Cigomático Derecho - ID 12
-  HuesoCraneo(
-    id: 12,
-    nombre: 'Cigomático Derecho',
-    nombreCientifico: 'Os zygomaticum dextrum',
-    descripcion:
-        'Forma el pómulo derecho. Da estructura y anclaje a músculos faciales.',
-    datoCurioso:
-        'También se le llama "malar" y su forma define en gran parte la estructura facial.',
-    color: Color(0xFF800080),
-  ),
-  // Hueso Cigomático Izquierdo - ID 13
-  HuesoCraneo(
-    id: 13,
-    nombre: 'Cigomático Izquierdo',
-    nombreCientifico: 'Os zygomaticum sinistrum',
-    descripcion: 'Forma el pómulo izquierdo y parte de la órbita ocular.',
-    datoCurioso:
-        'Es el hueso más prominente de la cara, por eso es el que más se fractura en accidentes.',
-    color: Color(0xFFEE82EE), // Color violeta claro
-  ),
+
   // Hueso Nasal Derecho - ID 14
   HuesoCraneo(
     id: 14,
@@ -260,7 +263,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'Su nombre en latín significa "reja de arado" por su forma característica.',
     color: Color(0xFFFFF8DC), // Color crema
-  ),
+  ),*/
 ];
 
 // Fin de la lista de huesos del cráneo

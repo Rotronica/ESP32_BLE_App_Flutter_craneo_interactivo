@@ -1,6 +1,6 @@
 # Cráneo Interactivo
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/tu-usuario/craneo_app_1)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/tu-usuario/craneo_app_1)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.11.0-blue.svg)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/Platform-Android-success.svg)]()
@@ -60,7 +60,7 @@ Una aplicación Flutter para interactuar con un modelo 3D de cráneo humano a tr
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/RodrigoCC/craneo_app_1.git
+   git clone https://github.com/Rotronica/ESP32_BLE_App_Flutter_craneo_interactivo.git
    cd craneo_app_1
    ```
 
