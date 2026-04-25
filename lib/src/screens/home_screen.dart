@@ -1,16 +1,23 @@
-import 'dart:async';
+// Archivo: home_screen.dart
+// Descripción: Pantalla principal de la aplicación que muestra el modelo 3D del cráneo,
+// controles de servos, búsqueda de dispositivos Bluetooth y información de huesos.
+// Esta pantalla integra todas las funcionalidades principales de la app.
 
-import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:model_viewer_plus/model_viewer_plus.dart';
+import 'dart:async'; // Para manejo de streams y temporizadores
 
-import '../models/hueso.dart';
-import '../services/ble_service.dart';
-import '../widgets/connection_sheet.dart';
-import '../widgets/hueso_info_card.dart';
-import '../widgets/hueso_dropdown.dart';
-import '../widgets/servo_control.dart';
+import 'package:flutter/material.dart'; // Framework base de Flutter
+import 'package:flutter_blue_plus/flutter_blue_plus.dart'; // Para comunicación Bluetooth LE
+import 'package:model_viewer_plus/model_viewer_plus.dart'; // Para mostrar modelos 3D
 
+import '../models/hueso.dart'; // Modelo de datos de los huesos del cráneo
+import '../services/ble_service.dart'; // Servicio para manejar conexiones Bluetooth
+import '../widgets/connection_sheet.dart'; // Widget para mostrar hoja de conexión
+import '../widgets/hueso_info_card.dart'; // Widget para mostrar información de huesos
+import '../widgets/hueso_dropdown.dart'; // Widget dropdown para seleccionar huesos
+import '../widgets/servo_control.dart'; // Widget para controlar servos
+
+// Clase principal de la pantalla home
+// Esta clase maneja el estado de la aplicación y coordina todas las funcionalidades
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -18,28 +25,48 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+// Estado de la pantalla home
+// Maneja el estado de conexión Bluetooth, selección de huesos, control de servos y modelo 3D
 class _HomeScreenState extends State<HomeScreen> {
+  // Servicio para manejar todas las operaciones Bluetooth
   final BleService _bleService = BleService();
+
+  // Lista completa de huesos del cráneo cargada desde el modelo
   final List<HuesoCraneo> _huesos = huesosCraneo;
+
+  // Hueso actualmente seleccionado por el usuario
   HuesoCraneo? _selectedHueso;
-  int _servoAngle = 35;
+
+  // Ángulo actual del servo (0-180 grados)
+  int _servoAngle = 0;
+
+  // Lista de dispositivos Bluetooth encontrados durante el escaneo
   List<ScanResult> _scanResults = [];
+
+  // Estado de escaneo Bluetooth (true = escaneando, false = detenido)
   bool _isScanning = false;
+
+  // Estado de carga del modelo 3D (true = cargado, false = cargando)
   bool _is3DModelLoaded = false;
 
+  // Suscripciones a streams para actualizar la UI en tiempo real
   late final StreamSubscription<List<ScanResult>> _scanSubscription;
   late final StreamSubscription<bool> _scanningSubscription;
 
   @override
   void initState() {
     super.initState();
-    // No inicializar el controlador 3D inmediatamente para evitar bloqueo
+    // Inicializar permisos y Bluetooth, pero no el modelo 3D para evitar bloqueo inicial
     _initializePermissionsAndBLE();
+
+    // Suscribirse al stream de resultados de escaneo para actualizar la lista de dispositivos
     _scanSubscription = _bleService.scanResultsStream.listen((results) {
       setState(() {
         _scanResults = results;
       });
     });
+
+    // Suscribirse al stream de estado de escaneo para mostrar indicadores de carga
     _scanningSubscription = _bleService.isScanningStream.listen((scanning) {
       setState(() {
         _isScanning = scanning;
@@ -47,8 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Método para inicializar permisos y Bluetooth al iniciar la app
   Future<void> _initializePermissionsAndBLE() async {
+    // Solicitar permisos necesarios para Bluetooth
     await _bleService.requestPermissions();
+
+    // Mostrar mensaje informativo al usuario sobre permisos
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -63,12 +94,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    // Cancelar suscripciones para evitar memory leaks
     _scanSubscription.cancel();
     _scanningSubscription.cancel();
+
+    // Liberar recursos del servicio Bluetooth
     _bleService.dispose();
+
     super.dispose();
   }
 
+  // Método para activar la carga del modelo 3D cuando el usuario lo solicita
   void _load3DModel() {
     setState(() {
       _is3DModelLoaded = true;
@@ -76,11 +112,14 @@ class _HomeScreenState extends State<HomeScreen> {
     debugPrint('Modelo 3D activado');
   }
 
+  // Método para seleccionar un hueso y enviar comando Bluetooth si está conectado
   Future<void> _selectHueso(HuesoCraneo hueso) async {
+    // Actualizar el estado con el hueso seleccionado
     setState(() {
       _selectedHueso = hueso;
     });
 
+    // Si hay conexión Bluetooth activa, enviar comando para resaltar el hueso
     if (_bleService.isConnected.value) {
       try {
         await _bleService.sendHuesoCommand(hueso.id);
@@ -94,12 +133,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Método para actualizar el ángulo del servo y enviar comando Bluetooth
   Future<void> _updateServo(double value) async {
+    // Convertir el valor del slider a entero (ángulo en grados)
     final angle = value.round();
     setState(() {
       _servoAngle = angle;
     });
 
+    // Si hay conexión Bluetooth, enviar comando para mover el servo
     if (_bleService.isConnected.value) {
       try {
         await _bleService.sendServoCommand(angle);
@@ -109,33 +151,40 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Método para mostrar la hoja modal de conexión Bluetooth
   void _showConnectionSheet() {
     showModalBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      isScrollControlled: true, // Permitir que la hoja ocupe más espacio
+      backgroundColor:
+          Colors.transparent, // Fondo transparente para mejor apariencia
       builder: (context) {
         return ConnectionSheet(
-          isScanning: _isScanning,
-          scanResults: _scanResults,
-          onStartScan: _bleService.startScan,
+          isScanning: _isScanning, // Estado actual de escaneo
+          scanResults: _scanResults, // Lista de dispositivos encontrados
+          onStartScan: _bleService.startScan, // Función para iniciar escaneo
           onConnect: (result) async {
+            // Intentar conectar al dispositivo seleccionado
             final connected = await _bleService.connect(result);
             if (!mounted) return;
             if (connected) {
+              // Cerrar la hoja modal si la conexión fue exitosa
               Navigator.of(this.context).pop();
             }
           },
-          status: _bleService.connectionStatus.value,
+          status:
+              _bleService.connectionStatus.value, // Estado de conexión actual
         );
       },
     );
   }
 
+  // Método para construir la sección del modelo 3D
   Widget _buildModelSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Título de la sección del modelo 3D
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Text(
@@ -143,6 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
+        // Contenedor del modelo 3D con diseño atractivo
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           height: 320,
@@ -155,7 +205,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.deepPurple.withAlpha((0.3 * 255).round()),
+                color: Colors.deepPurple.withAlpha(
+                  (0.3 * 255).round(),
+                ), // Sombra púrpura sutil
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -165,33 +217,40 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(24),
             child: Stack(
               children: [
-                // Modelo 3D con ModelViewer
+                // Mostrar el modelo 3D si está cargado
                 if (_is3DModelLoaded)
                   ModelViewer(
                     backgroundColor: Colors.transparent,
-                    src: 'assets/models/CraneoOBJ.glb',
+                    src:
+                        'assets/models/CraneoOBJ.glb', // Ruta al archivo GLB del cráneo
                     alt: 'Modelo 3D del cráneo humano',
-                    ar: true,
-                    arModes: ['scene-viewer', 'webxr', 'quick-look'],
-                    autoRotate: true,
-                    cameraControls: true,
-                    disableZoom: false,
-                    loading: Loading.eager,
+                    ar: true, // Habilitar realidad aumentada
+                    arModes: [
+                      'scene-viewer',
+                      'webxr',
+                      'quick-look',
+                    ], // Modos AR soportados
+                    autoRotate: true, // Rotación automática
+                    cameraControls: true, // Controles de cámara
+                    disableZoom: false, // Permitir zoom
+                    loading: Loading.eager, // Carga inmediata
                   )
                 else
-                  // Placeholder con botón para cargar el modelo
+                  // Placeholder cuando el modelo no está cargado
                   Container(
                     color: Colors.black54,
                     child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Icono de realidad aumentada
                           Icon(
                             Icons.view_in_ar,
                             color: Colors.deepPurple,
                             size: 64,
                           ),
                           const SizedBox(height: 16),
+                          // Texto informativo
                           const Text(
                             'Modelo 3D no cargado',
                             style: TextStyle(
@@ -201,6 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
+                          // Instrucción adicional para el usuario
                           const Text(
                             'Presiona el botón para cargar el cráneo 3D',
                             style: TextStyle(
@@ -210,6 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 24),
+                          // Botón para cargar el modelo 3D
                           ElevatedButton.icon(
                             onPressed: _load3DModel,
                             icon: const Icon(Icons.play_arrow),
@@ -227,7 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                // Overlay con información del hueso seleccionado
+                // Overlay que muestra información del hueso seleccionado sobre el modelo 3D
                 Positioned(
                   top: 12,
                   right: 12,
@@ -239,16 +300,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black87,
+                            color: Colors.black87, // Fondo semi-transparente
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: _selectedHueso!.color,
+                              color: _selectedHueso!
+                                  .color, // Borde del color del hueso
                               width: 2,
                             ),
                           ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              // Nombre común del hueso
                               Text(
                                 _selectedHueso!.nombre,
                                 style: TextStyle(
@@ -258,11 +321,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(height: 4),
+                              // Nombre científico del hueso
                               Text(
                                 _selectedHueso!.nombreCientifico,
                                 style: TextStyle(
                                   color: _selectedHueso!.color.withAlpha(
-                                    (0.8 * 255).round(),
+                                    (0.8 * 255).round(), // Opacidad reducida
                                   ),
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
@@ -271,12 +335,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         )
-                      : const SizedBox.shrink(),
+                      : const SizedBox.shrink(), // No mostrar nada si no hay hueso seleccionado
                 ),
               ],
             ),
           ),
         ),
+        // Texto explicativo sobre el funcionamiento del modelo 3D
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Text(
@@ -288,12 +353,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Método build principal que construye toda la interfaz de usuario
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Barra superior de la aplicación
       appBar: AppBar(
         title: const Text('Cráneo Interactivo'),
         centerTitle: true,
+        // Botón de menú para abrir el drawer
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        // Indicador de estado de conexión Bluetooth en la esquina superior derecha
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: _bleService.isConnected,
@@ -310,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: (connected ? Colors.green : Colors.red).withAlpha(
-                      (0.2 * 255).round(),
+                      (0.2 * 255).round(), // Fondo semi-transparente
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
@@ -321,6 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Icono que cambia según estado de conexión
                       Icon(
                         connected
                             ? Icons.bluetooth_connected
@@ -329,6 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         size: 18,
                       ),
                       const SizedBox(width: 6),
+                      // Texto que indica estado de conexión
                       Text(
                         connected ? 'Conectado' : 'Desconectado',
                         style: TextStyle(
@@ -345,12 +422,93 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      // Panel lateral (drawer) con menú de opciones
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            // Encabezado del drawer
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              child: Text(
+                'Cráneo Interactivo',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            // Opción "Acerca de" en el drawer
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Acerca de'),
+              onTap: () {
+                Navigator.of(context).pop(); // Cerrar el drawer
+                // Mostrar diálogo "Acerca de" con información de la app
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Acerca de'),
+                    content: const SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Cráneo Interactivo'),
+                          Text('Versión: 0.1.0'),
+                          Text('© 2026 Rodrigo C.C.'),
+                          SizedBox(height: 16),
+                          Text('Desarrollado por Rodrigo C.C.'),
+                          Text(
+                            'Aplicación para interactuar con modelo 3D de cráneo vía Bluetooth.',
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Licencia:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text('MIT License'),
+                          SizedBox(height: 8),
+                          Text(
+                            'Copyright (c) 2026 Rodrigo C.C.\n\n'
+                            'Permission is hereby granted, free of charge, to any person obtaining a copy '
+                            'of this software and associated documentation files (the "Software"), to deal '
+                            'in the Software without restriction, including without limitation the rights '
+                            'to use, copy, modify, merge, publish, distribute, sublicense, and/or sell '
+                            'copies of the Software, and to permit persons to whom the Software is '
+                            'furnished to do so, subject to the following conditions:\n\n'
+                            'The above copyright notice and this permission notice shall be included in all '
+                            'copies or substantial portions of the Software.\n\n'
+                            'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR '
+                            'IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, '
+                            'FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE '
+                            'AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER '
+                            'LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, '
+                            'OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE '
+                            'SOFTWARE.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cerrar'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      // Cuerpo principal de la pantalla
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics:
+                    const BouncingScrollPhysics(), // Efecto de rebote al hacer scroll
                 padding: EdgeInsets.only(
                   top: 12,
                   left: 0,
@@ -359,9 +517,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Column(
                   children: [
+                    // Sección del modelo 3D
                     _buildModelSection(),
                     const SizedBox(height: 20),
-                    // Dropdown para seleccionar huesos
+                    // Dropdown para seleccionar huesos del cráneo
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: HuesoDropdown(
@@ -369,24 +528,29 @@ class _HomeScreenState extends State<HomeScreen> {
                         huesos: _huesos,
                         onChanged: (hueso) {
                           if (hueso != null) {
-                            _selectHueso(hueso);
+                            _selectHueso(hueso); // Llamar método de selección
                           }
                         },
                       ),
                     ),
-                    // Información del hueso seleccionado
+                    // Mostrar información del hueso solo si hay uno seleccionado
                     if (_selectedHueso != null) ...[
                       const SizedBox(height: 16),
-                      HuesoInfoCard(hueso: _selectedHueso!),
+                      HuesoInfoCard(
+                        hueso: _selectedHueso!,
+                      ), // Tarjeta con info detallada
                     ],
                     const SizedBox(height: 20),
-                    // Control del servo
+                    // Control deslizante para el servo
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: ServoControl(
                         servoAngle: _servoAngle,
-                        enabled: _bleService.isConnected.value,
-                        onChanged: _updateServo,
+                        enabled: _bleService
+                            .isConnected
+                            .value, // Habilitado solo si conectado
+                        onChanged:
+                            _updateServo, // Callback para cambios en el ángulo
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -397,13 +561,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      // Botón flotante para conectar/desconectar Bluetooth
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: _bleService.isConnected,
         builder: (context, connected, child) {
           return FloatingActionButton.extended(
             onPressed: connected
-                ? _bleService.disconnect
-                : _showConnectionSheet,
+                ? _bleService
+                      .disconnect // Desconectar si está conectado
+                : _showConnectionSheet, // Mostrar hoja de conexión si no está conectado
             icon: Icon(
               connected ? Icons.power_settings_new : Icons.bluetooth_searching,
             ),
@@ -415,3 +581,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+// Fin de la clase HomeScreen
+// Esta pantalla integra todas las funcionalidades: modelo 3D, selección de huesos,
+// control de servos y conexión Bluetooth
