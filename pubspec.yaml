@@ -62,8 +62,18 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/models/CraneoOBJ.glb
-
+    - assets/models/craneo.glb
+    - assets/models/Temporal_Izquierdo.glb
+    - assets/models/Temporal_Derecho.glb
+    - assets/models/Cigomatico_Izquierdo.glb
+    - assets/models/Cigomatico_Derecho.glb
+    - assets/models/Maxilar_Izquierdo_Derecho.glb
+    - assets/models/Esfenoides.glb
+    - assets/models/Frontal.glb
+    - assets/models/Parietal_Izquierdo.glb
+    - assets/models/Parietal_Derecho.glb
+    - assets/models/Occipital.glb
+      
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

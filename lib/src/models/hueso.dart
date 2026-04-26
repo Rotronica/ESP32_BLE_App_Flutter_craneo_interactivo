@@ -16,6 +16,8 @@ class HuesoCraneo {
   final String datoCurioso;
   // Color único para identificar visualmente el hueso en el modelo 3D
   final Color color;
+  // Archivo del modelo 3D correspondiente
+  final String modelFile;
 
   // Constructor constante que requiere todos los parámetros
   const HuesoCraneo({
@@ -25,6 +27,7 @@ class HuesoCraneo {
     required this.descripcion,
     required this.datoCurioso,
     required this.color,
+    required this.modelFile,
   });
 }
 
@@ -42,6 +45,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'La apófisis mastoides (bulto detrás de la oreja) tarda años en desarrollarse completamente.',
     color: Color(0xFFFFDCA0), // Color crema claro
+    modelFile: 'Temporal_Izquierdo.glb',
   ),
   // Hueso Cigomático Izquierdo - ID 2
   HuesoCraneo(
@@ -52,6 +56,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'Es el hueso más prominente de la cara, por eso es el que más se fractura en accidentes.',
     color: Color(0xFFFF0000), // Color rojo
+    modelFile: 'Cigomatico_Izquierdo.glb',
   ),
   // Hueso Maxilar Izquierdo - ID 3
   HuesoCraneo(
@@ -63,6 +68,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'Las dos mitades del maxilar se fusionan alrededor de los 4-6 meses de vida fetal.',
     color: Color(0xFF00FF00), // Color verde
+    modelFile: 'Maxilar_Izquierdo_Derecho.glb',
   ),
   // Hueso Cigomático Derecho - ID 4
   HuesoCraneo(
@@ -74,6 +80,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'También se le llama "malar" y su forma define en gran parte la estructura facial.',
     color: Color(0xFF0000FF), // Color azul
+    modelFile: 'Cigomatico_Derecho.glb',
   ),
   // Hueso Temporal Derecho - ID 5
   HuesoCraneo(
@@ -85,6 +92,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'Es el hueso que alberga el martillo, yunque y estribo (los huesos más pequeños del cuerpo).',
     color: Color(0xFF00FFFF), // Color cian
+    modelFile: 'Temporal_Derecho.glb',
   ),
   // Hueso Esfenoides - ID 6
   HuesoCraneo(
@@ -96,6 +104,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'Es el hueso más complejo del cráneo, con forma de mariposa y agujeros para nervios y arterias.',
     color: Color(0xFFFF00FF), // Color magenta
+    modelFile: 'Esfenoides.glb',
   ),
   // Hueso Occipital - ID 7
   HuesoCraneo(
@@ -107,6 +116,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'El agujero magno es por donde pasa la médula espinal conectándose con el cerebro.',
     color: Color(0xFFFFA500),
+    modelFile: 'Occipital.glb',
   ),
   // Hueso Parietal Derecho - ID 8
   HuesoCraneo(
@@ -118,6 +128,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'En la antigüedad, se usaba para hacer trepanaciones (agujeros para liberar "espíritus malignos").',
     color: Color(0xFFFFFF00), // Color amarillo
+    modelFile: 'Parietal_Derecho.glb',
   ),
   // Hueso Parietal Izquierdo - ID 9
   HuesoCraneo(
@@ -127,6 +138,7 @@ const List<HuesoCraneo> huesosCraneo = [
     descripcion: 'Forma la parte superior y lateral izquierda del cráneo.',
     datoCurioso: 'Es uno de los huesos más resistentes del cuerpo humano.',
     color: Color(0xFFC80000), // Color rojo oscuro
+    modelFile: 'Parietal_Izquierdo.glb',
   ),
   // Hueso Frontal - ID 10
   HuesoCraneo(
@@ -138,6 +150,7 @@ const List<HuesoCraneo> huesosCraneo = [
     datoCurioso:
         'Es el hueso que más varía entre diferentes personas, dando características únicas a cada rostro.',
     color: Color(0xFFFF69B4), // Color rosa fuerte
+    modelFile: 'Frontal.glb',
   ),
 
   /*/ Hueso Etmoides - ID 11

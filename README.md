@@ -1,6 +1,6 @@
 # Cráneo Interactivo
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/tu-usuario/craneo_app_1)
+[![Version](https://img.shields.io/badge/version-0.1.2-blue.svg)](https://github.com/tu-usuario/craneo_app_1)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.11.0-blue.svg)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/Platform-Android-success.svg)]()
@@ -12,14 +12,22 @@
 
 ## Descripción 
 
-Una aplicación Flutter para interactuar con un modelo 3D de cráneo humano a través de Bluetooth. Permite visualizar huesos del cráneo, controlar un servo motor y conectarse a dispositivos ESP32.
+Una aplicación Flutter para interactuar con un modelo 3D de cráneo humano a través de Bluetooth. Permite visualizar huesos del cráneo de forma dinámica (cambia automáticamente al seleccionar un hueso), controlar un servo motor y conectarse a dispositivos ESP32.
+
+**Última actualización (Abril 2026)**: 
+- Modelo 3D del cráneo se muestra automáticamente al iniciar la app
+- Cambio dinámico de modelos 3D al seleccionar huesos específicos con rotación automática
+- Eliminación del botón "Cargar Modelo 3D" para una experiencia más fluida
+- Botón "Ver Cráneo Completo" para resetear la vista
+- Optimización del cambio de modelos con keys únicas para evitar problemas de renderizado
+- Código optimizado sin warnings
 
 ## 👤 Autor y Versión
 
 | Campo | Información |
 |-------|-------------|
 | **Autor** | Rodrigo C.C. |
-| **Versión** | 0.1.0 |
+| **Versión** | 0.1.2 |
 | **Fecha** | Abril 2026 |
 | **Framework** | Flutter 3.11.0+ |
 | **Plataforma** | Android |
@@ -43,8 +51,8 @@ Una aplicación Flutter para interactuar con un modelo 3D de cráneo humano a tr
 ---
 ## Funcionalidades
 
-- **Visualización 3D**: Modelo interactivo del cráneo humano que rota automáticamente.
-- **Selección de Huesos**: Dropdown para seleccionar huesos específicos del cráneo.
+- **Visualización 3D Interactiva**: Modelo interactivo del cráneo humano que rota automáticamente. Al seleccionar un hueso, el modelo cambia dinámicamente al hueso específico.
+- **Selección de Huesos**: Dropdown para seleccionar huesos específicos del cráneo con cambio automático del modelo 3D.
 - **Control de Servo**: Slider para controlar el ángulo de un servo motor conectado vía Bluetooth.
 - **Conexión Bluetooth**: Escaneo y conexión a dispositivos ESP32 con servicios BLE.
 - **Información Educativa**: Tarjetas con información detallada de cada hueso.
@@ -76,8 +84,8 @@ Una aplicación Flutter para interactuar con un modelo 3D de cráneo humano a tr
 
 ## Uso
 
-1. **Inicio**: La app solicita permisos de Bluetooth al iniciar.
-2. **Modelo 3D**: Presiona "Cargar Modelo 3D" para activar la visualización.
+1. **Inicio**: La app solicita permisos de Bluetooth al iniciar y muestra el modelo 3D del cráneo completo girando automáticamente.
+2. **Selección de Huesos**: Usa el dropdown para seleccionar huesos específicos del cráneo. El modelo 3D cambiará automáticamente al hueso seleccionado.
 3. **Conexión**: Usa el botón "Conectar" para escanear y conectar a tu ESP32.
 4. **Control**: Selecciona huesos y ajusta el servo cuando estés conectado.
 5. **Información**: Accede al menú lateral para ver "Acerca de".
@@ -106,31 +114,34 @@ lib/
 
 ### 1. Configuración de Bluetooth (ble_service.dart)
 - **Líneas 50-80**: Configuración de permisos Bluetooth
-- **Líneas 85-120**: Lógica de escaneo BLE
-- **Líneas 125-180**: Conexión y descubrimiento de servicios
+- **Líneas 85-140**: Lógica de escaneo BLE
+- **Líneas 145-200**: Conexión y descubrimiento de servicios
 - **Modificaciones comunes**: Cambiar UUIDs de servicios/características, ajustar timeouts
 
 ### 2. Interfaz de Usuario (home_screen.dart)
-- **Líneas 40-60**: Estado de la aplicación (conexión, selección de hueso)
-- **Líneas 120-160**: Construcción del modelo 3D
-- **Líneas 200-250**: Controles de servo y selección de huesos
-- **Modificaciones comunes**: Cambiar colores, agregar nuevos controles, modificar layout
+- **Líneas 40-60**: Estado de la aplicación (conexión, selección de hueso, modelo 3D actual)
+- **Líneas 182-250**: Construcción del modelo 3D (siempre visible, cambia dinámicamente)
+- **Líneas 108-140**: Controles de servo y selección de huesos
+- **Líneas 485-510**: Botón "Ver Cráneo Completo" para resetear la vista
+- **Modificaciones comunes**: Cambiar colores, agregar nuevos controles, modificar layout, ajustar modelos 3D
 
 ### 3. Modelo 3D (home_screen.dart)
-- **Líneas 130-150**: Configuración del ModelViewer
-- **Modificaciones comunes**: Cambiar ruta del modelo, ajustar parámetros de visualización
+- **Líneas 220-240**: Configuración del ModelViewer (auto-rotación, AR, controles)
+- **Líneas 108-120**: Lógica de cambio de modelo al seleccionar hueso
+- **Modificaciones comunes**: Cambiar ruta del modelo, ajustar parámetros de visualización, agregar nuevos modelos
 
 ### 4. Datos de Huesos (models/hueso.dart)
-- **Líneas 1-50**: Lista de huesos del cráneo
-- **Modificaciones comunes**: Agregar/quitar huesos, cambiar información, colores
+- **Líneas 1-25**: Definición de la clase HuesoCraneo (agregada propiedad modelFile)
+- **Líneas 30-150**: Lista de huesos del cráneo con archivos de modelo
+- **Modificaciones comunes**: Agregar/quitar huesos, cambiar información, colores, archivos de modelo
 
 ### 5. Conexión Bluetooth (connection_sheet.dart)
-- **Líneas 80-120**: Lógica de escaneo y conexión
-- **Líneas 140-180**: Lista de dispositivos encontrados
+- **Líneas 80-120**: Lógica de escaneo y conexión en el build method
+- **Líneas 120-180**: Lista de dispositivos encontrados y UI de conexión
 - **Modificaciones comunes**: Cambiar filtros de dispositivos, modificar UI de conexión
 
 ### 6. Servicios BLE (ble_service.dart)
-- **Líneas 180-220**: Envío de comandos al ESP32
+- **Líneas 280-300**: Envío de comandos al ESP32 (huesos y servo)
 - **Modificaciones comunes**: Agregar nuevos comandos, cambiar protocolos de comunicación
 
 ## Dependencias Principales

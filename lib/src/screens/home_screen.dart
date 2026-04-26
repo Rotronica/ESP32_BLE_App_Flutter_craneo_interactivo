@@ -46,8 +46,11 @@ class _HomeScreenState extends State<HomeScreen> {
   // Estado de escaneo Bluetooth (true = escaneando, false = detenido)
   bool _isScanning = false;
 
-  // Estado de carga del modelo 3D (true = cargado, false = cargando)
-  bool _is3DModelLoaded = false;
+  // Modelo 3D actualmente mostrado
+  String _currentModel = 'assets/models/craneo.glb';
+
+  // Key única para forzar la reconstrucción del ModelViewer
+  Key _modelViewerKey = UniqueKey();
 
   // Suscripciones a streams para actualizar la UI en tiempo real
   late final StreamSubscription<List<ScanResult>> _scanSubscription;
@@ -104,19 +107,21 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // Método para activar la carga del modelo 3D cuando el usuario lo solicita
-  void _load3DModel() {
-    setState(() {
-      _is3DModelLoaded = true;
-    });
-    debugPrint('Modelo 3D activado');
-  }
-
   // Método para seleccionar un hueso y enviar comando Bluetooth si está conectado
   Future<void> _selectHueso(HuesoCraneo hueso) async {
     // Actualizar el estado con el hueso seleccionado
     setState(() {
       _selectedHueso = hueso;
+      // Cambiar el modelo 3D al del hueso seleccionado si tiene modelo
+      if (hueso.modelFile.isNotEmpty) {
+        _currentModel = 'assets/models/${hueso.modelFile}';
+        debugPrint('Cambiando modelo a: $_currentModel');
+      } else {
+        _currentModel = 'assets/models/craneo.glb'; // Mantener el cráneo si no tiene modelo específico
+        debugPrint('Manteniendo modelo craneo: $_currentModel');
+      }
+      // Forzar reconstrucción del ModelViewer con nueva key
+      _modelViewerKey = UniqueKey();
     });
 
     // Si hay conexión Bluetooth activa, enviar comando para resaltar el hueso
@@ -188,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Text(
-            'Cráneo 3D (Rotando)',
+            'Modelo 3D (Rotando)',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
@@ -217,77 +222,23 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(24),
             child: Stack(
               children: [
-                // Mostrar el modelo 3D si está cargado
-                if (_is3DModelLoaded)
-                  ModelViewer(
-                    backgroundColor: Colors.transparent,
-                    src:
-                        'assets/models/CraneoOBJ.glb', // Ruta al archivo GLB del cráneo
-                    alt: 'Modelo 3D del cráneo humano',
-                    ar: true, // Habilitar realidad aumentada
-                    arModes: [
-                      'scene-viewer',
-                      'webxr',
-                      'quick-look',
-                    ], // Modos AR soportados
-                    autoRotate: true, // Rotación automática
-                    cameraControls: true, // Controles de cámara
-                    disableZoom: false, // Permitir zoom
-                    loading: Loading.eager, // Carga inmediata
-                  )
-                else
-                  // Placeholder cuando el modelo no está cargado
-                  Container(
-                    color: Colors.black54,
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Icono de realidad aumentada
-                          Icon(
-                            Icons.view_in_ar,
-                            color: Colors.deepPurple,
-                            size: 64,
-                          ),
-                          const SizedBox(height: 16),
-                          // Texto informativo
-                          const Text(
-                            'Modelo 3D no cargado',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Instrucción adicional para el usuario
-                          const Text(
-                            'Presiona el botón para cargar el cráneo 3D',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          // Botón para cargar el modelo 3D
-                          ElevatedButton.icon(
-                            onPressed: _load3DModel,
-                            icon: const Icon(Icons.play_arrow),
-                            label: const Text('Cargar Modelo 3D'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                // Mostrar el modelo 3D
+                ModelViewer(
+                  key: _modelViewerKey, // Key única para forzar reconstrucción
+                  backgroundColor: Colors.transparent,
+                  src: _currentModel, // Modelo actual
+                  alt: 'Modelo 3D del hueso seleccionado',
+                  ar: true, // Habilitar realidad aumentada
+                  arModes: [
+                    'scene-viewer',
+                    'webxr',
+                    'quick-look',
+                  ], // Modos AR soportados
+                  autoRotate: true, // Rotación automática
+                  cameraControls: true, // Controles de cámara
+                  disableZoom: false, // Permitir zoom
+                  loading: Loading.eager, // Carga inmediata
+                ),
                 // Overlay que muestra información del hueso seleccionado sobre el modelo 3D
                 Positioned(
                   top: 12,
@@ -535,6 +486,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     // Mostrar información del hueso solo si hay uno seleccionado
                     if (_selectedHueso != null) ...[
+                      const SizedBox(height: 16),
+                      // Botón para resetear al cráneo completo
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _selectedHueso = null;
+                              _currentModel = 'assets/models/craneo.glb';
+                              _modelViewerKey = UniqueKey();
+                              debugPrint('Reseteando a modelo craneo completo');
+                            });
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Ver Cráneo Completo'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       HuesoInfoCard(
                         hueso: _selectedHueso!,
