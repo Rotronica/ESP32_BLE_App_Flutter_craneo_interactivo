@@ -1,6 +1,6 @@
 # Cráneo Interactivo
 
-[![Version](https://img.shields.io/badge/version-0.1.2-blue.svg)](https://github.com/tu-usuario/craneo_app_1)
+[![Version](https://img.shields.io/badge/version-0.1.3-blue.svg)](https://github.com/tu-usuario/craneo_app_1)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.11.0-blue.svg)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/Platform-Android-success.svg)]()
@@ -14,7 +14,7 @@
 
 Una aplicación Flutter para interactuar con un modelo 3D de cráneo humano a través de Bluetooth. Permite visualizar huesos del cráneo de forma dinámica (cambia automáticamente al seleccionar un hueso), controlar un servo motor y conectarse a dispositivos ESP32.
 
-**Última actualización (Abril 2026)**: 
+**Última actualización (Mayo 2026)**: 
 - Modelo 3D del cráneo se muestra automáticamente al iniciar la app
 - Cambio dinámico de modelos 3D al seleccionar huesos específicos con rotación automática
 - Eliminación del botón "Cargar Modelo 3D" para una experiencia más fluida
