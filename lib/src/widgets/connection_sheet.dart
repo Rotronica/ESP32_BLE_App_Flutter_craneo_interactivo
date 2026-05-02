@@ -1,25 +1,20 @@
 // Archivo: connection_sheet.dart
-// Descripción: Widget que muestra una hoja modal para conectar dispositivos Bluetooth.
-// Permite escanear dispositivos BLE, mostrar resultados y conectar al dispositivo seleccionado.
-// Se usa como bottom sheet desde la pantalla principal.
+// Versión CORREGIDA - Maneja correctamente la búsqueda múltiple sin reiniciar el ESP32
 
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:flutter/material.dart'; // Framework base de Flutter
-import 'package:flutter_blue_plus/flutter_blue_plus.dart'; // Para tipos BLE
+import 'dart:async';
 
-// Widget que representa la hoja de conexión Bluetooth
-// Es un StatelessWidget porque no maneja estado interno
-class ConnectionSheet extends StatelessWidget {
-  // Propiedades del widget - todas requeridas
-  final bool isScanning; // Indica si se está escaneando actualmente
-  final List<ScanResult> scanResults; // Lista de dispositivos encontrados
-  final Future<void> Function() onStartScan; // Callback para iniciar escaneo
-  final Future<void> Function(ScanResult)
-  onConnect; // Callback para conectar a dispositivo
-  final String status; // Estado actual de la conexión como texto
+import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
-  // Constructor con parámetros requeridos
+class ConnectionSheet extends StatefulWidget {
+  final bool isScanning;
+  final List<ScanResult> scanResults;
+  final Future<void> Function() onStartScan;
+  final Future<void> Function(ScanResult) onConnect;
+  final String status;
+
   const ConnectionSheet({
     super.key,
     required this.isScanning,
@@ -30,19 +25,78 @@ class ConnectionSheet extends StatelessWidget {
   });
 
   @override
+  State<ConnectionSheet> createState() => _ConnectionSheetState();
+}
+
+class _ConnectionSheetState extends State<ConnectionSheet> {
+  Timer? _checkTimer;
+  bool _foundEsp32 = false;
+  bool _showLoadingIndicator = false;
+
+  // Control para evitar múltiples escaneos simultáneos
+  bool _isStartingScan = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _checkTimer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
+      if (mounted) {
+        final bool hasEsp32 = _isEsp32InResults(widget.scanResults);
+
+        if (hasEsp32 && widget.isScanning && !_foundEsp32) {
+          _foundEsp32 = true;
+          _showLoadingIndicator = false;
+          debugPrint('🎯 ESP32 encontrado - Ocultando indicador');
+          if (mounted) setState(() {});
+        }
+
+        if (widget.isScanning && !_foundEsp32) {
+          _showLoadingIndicator = true;
+        } else if (!widget.isScanning) {
+          _showLoadingIndicator = false;
+          _foundEsp32 = false;
+          _isStartingScan = false; // Resetear bandera al terminar escaneo
+        }
+
+        if (mounted) setState(() {});
+      }
+    });
+  }
+
+  bool _isEsp32InResults(List<ScanResult> results) {
+    for (final result in results) {
+      final String name = result.device.platformName.toUpperCase();
+      final String id = result.device.remoteId.toString();
+
+      if (name.contains('CRANEO') ||
+          name.contains('ESP32') ||
+          name.contains('CRANEO_INTERACTIVO') ||
+          id.contains('94b555f847fa') ||
+          id.contains('94:b5:55:f8:47:fa')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @override
+  void dispose() {
+    _checkTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      // Altura de la hoja modal (70% de la pantalla)
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ), // Bordes redondeados arriba
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         children: [
-          // Indicador visual de que es una hoja deslizable (handle)
+          // Handle
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 40,
@@ -53,7 +107,8 @@ class ConnectionSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Título de la hoja
+
+          // Título
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
@@ -62,48 +117,54 @@ class ConnectionSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // Mostrar indicador de carga si se está escaneando
-          if (isScanning)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+
+          // Indicador de carga
+          if (_showLoadingIndicator)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(), // Spinner de carga
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.deepPurple,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  const Text('Buscando dispositivos...'), // Texto de estado
+                  Text(
+                    'Buscando ESP32...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.deepPurple[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             )
-          else
-            // Mostrar estado actual cuando no se está escaneando
+          else if (!widget.isScanning && widget.scanResults.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Icono que cambia según el estado de Bluetooth
-                  if (isScanning)
-                    const Icon(
-                      Icons.bluetooth_searching,
-                      color: Colors.deepPurple,
-                      size: 24,
-                    )
-                  else if (status.contains(
-                    'Habilita',
-                  )) // Bluetooth deshabilitado
+                  if (widget.status.contains('Habilita'))
                     const Icon(
                       Icons.bluetooth_disabled,
                       color: Colors.red,
                       size: 24,
                     )
-                  else // Estado normal
+                  else
                     const Icon(Icons.bluetooth, color: Colors.grey, size: 24),
                   const SizedBox(width: 8),
-                  // Texto del estado actual
                   Expanded(
                     child: Text(
-                      status,
+                      widget.status,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black54,
@@ -113,138 +174,240 @@ class ConnectionSheet extends StatelessWidget {
                   ),
                 ],
               ),
+            )
+          else if (!_showLoadingIndicator &&
+              widget.scanResults.isNotEmpty &&
+              widget.isScanning)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green[600], size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ESP32 encontrado!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
+
           const SizedBox(height: 12),
-          // Botón para iniciar el escaneo de dispositivos
+
+          // Botón buscar - MEJORADO para evitar múltiples escaneos
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ElevatedButton.icon(
-              onPressed: isScanning
-                  ? null // Deshabilitar botón durante escaneo
+              onPressed: (widget.isScanning || _isStartingScan)
+                  ? null
                   : () async {
-                      // Verificar estado del adaptador Bluetooth antes de escanear
+                      if (_isStartingScan) return;
+                      _isStartingScan = true;
+
+                      debugPrint('🔍 Iniciando NUEVO escaneo');
+
+                      // Reiniciar banderas
+                      _foundEsp32 = false;
+                      _showLoadingIndicator = true;
+                      if (mounted) setState(() {});
+
+                      // Verificar Bluetooth
                       final adapterState =
                           await FlutterBluePlus.adapterState.first;
                       if (adapterState != BluetoothAdapterState.on) {
-                        // Mostrar diálogo si Bluetooth está desactivado
+                        _showLoadingIndicator = false;
+                        _isStartingScan = false;
+                        if (mounted) setState(() {});
                         showDialog(
                           context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Bluetooth Desactivado'),
-                              content: const Text(
-                                'Por favor, active el Bluetooth en la configuración de su dispositivo para buscar dispositivos.',
+                          builder: (BuildContext context) => AlertDialog(
+                            title: const Text('Bluetooth Desactivado'),
+                            content: const Text(
+                              'Por favor, active el Bluetooth en la configuración de su dispositivo.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Entendido'),
                               ),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: const Text('Entendido'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
+                            ],
+                          ),
                         );
                       } else {
-                        // Iniciar escaneo si Bluetooth está habilitado
-                        onStartScan();
+                        // Iniciar escaneo
+                        await widget.onStartScan();
+                        _isStartingScan = false;
+                        if (mounted) setState(() {});
                       }
                     },
-              // Icono del botón que cambia según estado
-              icon: isScanning
+              icon: (widget.isScanning || _isStartingScan)
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color:
-                            Colors.white, // Spinner blanco sobre fondo púrpura
+                        color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.bluetooth_searching),
-              label: Text(isScanning ? 'Buscando...' : 'Buscar dispositivos'),
+                  : const Icon(Icons.refresh), // Cambié a icono de refresh
+              label: Text(
+                (widget.isScanning || _isStartingScan)
+                    ? 'Buscando...'
+                    : 'Buscar dispositivo',
+              ), // Texto más claro
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(
-                  double.infinity,
-                  48,
-                ), // Botón de ancho completo
-                backgroundColor: Colors.deepPurple,
+                minimumSize: const Size(double.infinity, 48),
+                backgroundColor: (widget.isScanning || _isStartingScan)
+                    ? Colors.deepPurple[400]
+                    : Colors.deepPurple,
               ),
             ),
           ),
+
+          const SizedBox(height: 8),
+
+          // Botón de limpieza de caché (nuevo)
+          if (!widget.isScanning && widget.scanResults.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextButton.icon(
+                onPressed: () async {
+                  debugPrint('🧹 Limpiando lista de dispositivos');
+                  // Forzar limpieza de resultados llamando a un nuevo escaneo
+                  _foundEsp32 = false;
+                  _showLoadingIndicator = true;
+                  if (mounted) setState(() {});
+
+                  // Detener cualquier escaneo activo
+                  await FlutterBluePlus.stopScan();
+                  await Future.delayed(const Duration(milliseconds: 200));
+
+                  // Iniciar nuevo escaneo
+                  await widget.onStartScan();
+                  if (mounted) setState(() {});
+                },
+                icon: const Icon(Icons.cleaning_services, size: 18),
+                label: const Text('Limpiar y buscar de nuevo'),
+                style: TextButton.styleFrom(foregroundColor: Colors.orange),
+              ),
+            ),
+
           const SizedBox(height: 16),
-          // Lista de dispositivos encontrados o mensaje de vacío
+
+          // Lista de dispositivos
           Expanded(
-            child: scanResults.isEmpty
+            child: widget.scanResults.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Icono cuando no hay dispositivos
                         Icon(
                           Icons.bluetooth_disabled,
                           size: 48,
                           color: Colors.grey[400],
                         ),
                         const SizedBox(height: 12),
-                        // Texto que cambia según si se está escaneando o no
                         Text(
-                          isScanning
-                              ? 'Buscando dispositivos...'
-                              : 'No se encontraron dispositivos',
+                          widget.isScanning && _showLoadingIndicator
+                              ? 'Buscando ESP32...\nAsegúrate que esté encendido'
+                              : 'No se encontraron dispositivos\nPresiona "Buscar nuevamente"',
+                          textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.grey[600]),
                         ),
-                        // Mostrar botón de reintento solo cuando no se está escaneando
-                        if (!isScanning) ...[
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: () => onStartScan(),
-                            child: const Text('Intentar de nuevo'),
-                          ),
-                        ],
                       ],
                     ),
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: scanResults.length,
+                    itemCount: widget.scanResults.length,
                     itemBuilder: (context, index) {
-                      final result = scanResults[index];
+                      final result = widget.scanResults[index];
+                      final bool isEsp32 = _isEsp32Device(result);
+                      final String deviceName =
+                          result.device.platformName.isEmpty
+                          ? (isEsp32
+                                ? 'ESP32 Cráneo'
+                                : 'Dispositivo desconocido')
+                          : result.device.platformName;
+                      final String deviceMac = result.device.remoteId.str;
+                      final int rssi = result.rssi;
+
                       return Card(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 4,
                         ),
+                        elevation: isEsp32 ? 4 : 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: isEsp32
+                              ? const BorderSide(color: Colors.green, width: 2)
+                              : BorderSide.none,
+                        ),
                         child: ListTile(
-                          // Icono de Bluetooth para cada dispositivo
-                          leading: const Icon(
-                            Icons.bluetooth,
-                            color: Colors.deepPurple,
+                          leading: CircleAvatar(
+                            backgroundColor: isEsp32
+                                ? Colors.green[100]
+                                : Colors.deepPurple[100],
+                            child: Icon(
+                              Icons.bluetooth,
+                              color: isEsp32 ? Colors.green : Colors.deepPurple,
+                            ),
                           ),
-                          // Nombre del dispositivo (o nombre por defecto si está vacío)
                           title: Text(
-                            result.device.platformName.isEmpty
-                                ? 'ESP32 Cráneo'
-                                : result.device.platformName,
+                            deviceName,
+                            style: TextStyle(
+                              fontWeight: isEsp32
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isEsp32 ? Colors.green[800] : null,
+                            ),
                           ),
-                          // ID único del dispositivo como subtítulo
-                          subtitle: Text(result.device.remoteId.str),
-                          // Intensidad de señal RSSI
-                          trailing: Text('${result.rssi} dBm'),
-                          // Al tocar, intentar conectar al dispositivo
-                          onTap: () => onConnect(result),
+                          subtitle: Text(
+                            deviceMac,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isEsp32
+                                  ? Colors.green[700]
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                          trailing: Text(
+                            '$rssi dBm',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _getRssiColor(rssi),
+                            ),
+                          ),
+                          onTap: () async {
+                            debugPrint('🔌 Conectando a: $deviceName');
+                            await widget.onConnect(result);
+                          },
                         ),
                       );
                     },
                   ),
           ),
-          // Texto informativo al final de la hoja
+
+          // Texto informativo
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              'Asegúrate de que el ESP32 esté encendido y con el servicio BLE activo.',
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
+              'Si no encuentras el dispositivo, asegúrate que el ESP32 esté encendido\n'
+              'y presiona "Buscar nuevamente"',
+              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
           ),
@@ -252,8 +415,23 @@ class ConnectionSheet extends StatelessWidget {
       ),
     );
   }
-}
 
-// Fin de la clase ConnectionSheet
-// Este widget proporciona una interfaz completa para la conexión Bluetooth,
-// incluyendo escaneo, visualización de dispositivos y manejo de estados.
+  bool _isEsp32Device(ScanResult result) {
+    final String name = result.device.platformName.toUpperCase();
+    final String id = result.device.remoteId.toString();
+
+    return name.contains('CRANEO') ||
+        name.contains('ESP32') ||
+        name.contains('CRANEO_INTERACTIVO') ||
+        id.contains('94b555f847fa') ||
+        id.contains('94:b5:55:f8:47:fa');
+  }
+
+  Color _getRssiColor(int rssi) {
+    if (rssi > -50) return Colors.green;
+    if (rssi > -70) return Colors.lightGreen;
+    if (rssi > -80) return Colors.orange;
+    if (rssi > -90) return Colors.deepOrange;
+    return Colors.red;
+  }
+}

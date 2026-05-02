@@ -27,8 +27,8 @@ Una aplicación Flutter para interactuar con un modelo 3D de cráneo humano a tr
 | Campo | Información |
 |-------|-------------|
 | **Autor** | Rodrigo C.C. |
-| **Versión** | 0.1.2 |
-| **Fecha** | Abril 2026 |
+| **Versión** | 0.1.3 |
+| **Fecha** | Mayo 2026 |
 | **Framework** | Flutter 3.11.0+ |
 | **Plataforma** | Android |
 

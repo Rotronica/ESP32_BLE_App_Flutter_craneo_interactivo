@@ -28,6 +28,9 @@ class HomeScreen extends StatefulWidget {
 // Estado de la pantalla home
 // Maneja el estado de conexión Bluetooth, selección de huesos, control de servos y modelo 3D
 class _HomeScreenState extends State<HomeScreen> {
+  // Agrega estas variables en _HomeScreenState
+  Timer? _servoTimer;
+  int _lastSentAngle = -1;
   // Servicio para manejar todas las operaciones Bluetooth
   final BleService _bleService = BleService();
 
@@ -52,6 +55,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Key única para forzar la reconstrucción del ModelViewer
   Key _modelViewerKey = UniqueKey();
 
+  // Controlador para forzar actualizaciones del modal de conexión
+  // Permite actualizar la UI del modal desde fuera sin cerrarlo
+  final _connectionSheetController = StreamController<void>.broadcast();
+
   // Suscripciones a streams para actualizar la UI en tiempo real
   late final StreamSubscription<List<ScanResult>> _scanSubscription;
   late final StreamSubscription<bool> _scanningSubscription;
@@ -64,16 +71,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Suscribirse al stream de resultados de escaneo para actualizar la lista de dispositivos
     _scanSubscription = _bleService.scanResultsStream.listen((results) {
-      setState(() {
-        _scanResults = results;
-      });
+      // Log para depuración: muestra cuántos dispositivos se encontraron
+      debugPrint('📱 HomeScreen recibió ${results.length} dispositivos');
+
+      // Actualizar el estado de la pantalla principal
+      if (mounted) {
+        setState(() {
+          _scanResults = results;
+        });
+        // Notificar al modal de conexión que hay nuevos resultados
+        // Esto fuerza la actualización del modal sin cerrarlo
+        _connectionSheetController.add(null);
+      }
     });
 
     // Suscribirse al stream de estado de escaneo para mostrar indicadores de carga
     _scanningSubscription = _bleService.isScanningStream.listen((scanning) {
-      setState(() {
-        _isScanning = scanning;
-      });
+      // Log para depuración: muestra cuando cambia el estado del escaneo
+      debugPrint('🔄 Estado escaneo cambiado a: $scanning');
+
+      // Actualizar el estado de la pantalla principal
+      if (mounted) {
+        setState(() {
+          _isScanning = scanning;
+        });
+        // Notificar al modal de conexión que cambió el estado de escaneo
+        _connectionSheetController.add(null);
+      }
     });
   }
 
@@ -100,6 +124,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // Cancelar suscripciones para evitar memory leaks
     _scanSubscription.cancel();
     _scanningSubscription.cancel();
+    // Cerrar el controlador del modal de conexión
+    _connectionSheetController.close();
 
     // Liberar recursos del servicio Bluetooth
     _bleService.dispose();
@@ -117,7 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentModel = 'assets/models/${hueso.modelFile}';
         debugPrint('Cambiando modelo a: $_currentModel');
       } else {
-        _currentModel = 'assets/models/craneo.glb'; // Mantener el cráneo si no tiene modelo específico
+        _currentModel =
+            'assets/models/craneo.glb'; // Mantener el cráneo si no tiene modelo específico
         debugPrint('Manteniendo modelo craneo: $_currentModel');
       }
       // Forzar reconstrucción del ModelViewer con nueva key
@@ -138,47 +165,131 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Método para actualizar el ángulo del servo y enviar comando Bluetooth
+  // Reemplaza el método _updateServo por este
   Future<void> _updateServo(double value) async {
-    // Convertir el valor del slider a entero (ángulo en grados)
     final angle = value.round();
+
+    // Actualizar UI inmediatamente (siempre se actualiza)
     setState(() {
       _servoAngle = angle;
     });
 
-    // Si hay conexión Bluetooth, enviar comando para mover el servo
-    if (_bleService.isConnected.value) {
-      try {
-        await _bleService.sendServoCommand(angle);
-      } catch (e) {
-        debugPrint('Error enviando comando SERVO: $e');
+    // Cancelar el timer anterior si existe
+    _servoTimer?.cancel();
+
+    // Crear un nuevo timer que enviará el comando después de 150ms
+    // Si el usuario sigue moviendo, se reinicia el timer
+    _servoTimer = Timer(const Duration(milliseconds: 150), () async {
+      // Solo enviar si el ángulo cambió
+      if (_lastSentAngle != angle && _bleService.isConnected.value) {
+        _lastSentAngle = angle;
+        try {
+          await _bleService.sendServoCommand(angle);
+          debugPrint('🔄 Servo enviado (debounced): $angle°');
+        } catch (e) {
+          debugPrint('❌ Error enviando servo: $e');
+        }
       }
-    }
+    });
   }
 
-  // Método para mostrar la hoja modal de conexión Bluetooth
+  // Método mejorado para mostrar la hoja modal de conexión Bluetooth
+  // Ahora usa StatefulBuilder para mantener el estado dentro del modal
   void _showConnectionSheet() {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true, // Permitir que la hoja ocupe más espacio
       backgroundColor:
           Colors.transparent, // Fondo transparente para mejor apariencia
-      builder: (context) {
-        return ConnectionSheet(
-          isScanning: _isScanning, // Estado actual de escaneo
-          scanResults: _scanResults, // Lista de dispositivos encontrados
-          onStartScan: _bleService.startScan, // Función para iniciar escaneo
-          onConnect: (result) async {
-            // Intentar conectar al dispositivo seleccionado
-            final connected = await _bleService.connect(result);
-            if (!mounted) return;
-            if (connected) {
-              // Cerrar la hoja modal si la conexión fue exitosa
-              Navigator.of(this.context).pop();
-            }
+      builder: (BuildContext modalContext) {
+        // Usar StatefulBuilder para mantener un estado independiente dentro del modal
+        // Esto permite actualizar el modal sin afectar la pantalla principal
+        return StatefulBuilder(
+          builder: (BuildContext modalContext, StateSetter setModalState) {
+            // Escuchar los cambios del servicio Bluetooth para actualizar el modal
+            return StreamBuilder<void>(
+              stream: _connectionSheetController.stream,
+              initialData: null,
+              builder: (BuildContext streamContext, AsyncSnapshot<void> snapshot) {
+                // Devolver el widget ConnectionSheet con los datos más recientes
+                return ConnectionSheet(
+                  isScanning: _isScanning, // Estado actual de escaneo
+                  scanResults:
+                      _scanResults, // Lista de dispositivos encontrados
+                  onStartScan: () async {
+                    // Función para iniciar el escaneo
+                    debugPrint('🔍 Iniciando escaneo desde botón del modal');
+
+                    // Limpiar resultados anteriores antes de empezar un nuevo escaneo
+                    if (mounted) {
+                      setState(() {
+                        _scanResults = [];
+                      });
+                    }
+
+                    // Actualizar el estado del modal para mostrar limpieza
+                    if (mounted) {
+                      setModalState(() {});
+                    }
+                    // Detener cualquier escaneo previo
+                    await _bleService.stopScan();
+                    await Future.delayed(const Duration(milliseconds: 200));
+                    // Iniciar el escaneo Bluetooth
+                    await _bleService.startScan();
+
+                    // Forzar una actualización adicional después de iniciar
+                    if (mounted) {
+                      setState(() {});
+                      setModalState(() {});
+                    }
+                  },
+                  onConnect: (ScanResult result) async {
+                    // Función para conectar al dispositivo seleccionado
+                    debugPrint(
+                      '🔌 Intentando conectar a: ${result.device.platformName}',
+                    );
+
+                    // Intentar la conexión Bluetooth
+                    final connected = await _bleService.connect(result);
+
+                    if (connected) {
+                      // Si la conexión fue exitosa, cerrar el modal
+                      debugPrint('✅ Conexión exitosa, cerrando modal');
+                      // Verificar que el modalContext aún está montado antes de usarlo
+                      if (modalContext.mounted) {
+                        Navigator.of(modalContext).pop();
+                      }
+
+                      // Mostrar mensaje de éxito al usuario
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(streamContext).showSnackBar(
+                        const SnackBar(
+                          content: Text('✅ Conectado al dispositivo ESP32'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } else {
+                      // Si la conexión falló, mostrar mensaje de error
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(streamContext).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            '❌ Error al conectar. Intenta nuevamente',
+                          ),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  status: _bleService
+                      .connectionStatus
+                      .value, // Estado de conexión actual
+                );
+              },
+            );
           },
-          status:
-              _bleService.connectionStatus.value, // Estado de conexión actual
         );
       },
     );
@@ -314,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         // Botón de menú para abrir el drawer
         leading: Builder(
-          builder: (context) => IconButton(
+          builder: (BuildContext context) => IconButton(
             icon: const Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
@@ -323,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: _bleService.isConnected,
-            builder: (context, connected, child) {
+            builder: (BuildContext context, bool connected, Widget? child) {
               return Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -395,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Mostrar diálogo "Acerca de" con información de la app
                 showDialog(
                   context: context,
-                  builder: (context) => AlertDialog(
+                  builder: (BuildContext context) => AlertDialog(
                     title: const Text('Acerca de'),
                     content: const SingleChildScrollView(
                       child: Column(
@@ -477,7 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: HuesoDropdown(
                         selectedHueso: _selectedHueso,
                         huesos: _huesos,
-                        onChanged: (hueso) {
+                        onChanged: (HuesoCraneo? hueso) {
                           if (hueso != null) {
                             _selectHueso(hueso); // Llamar método de selección
                           }
@@ -536,11 +647,25 @@ class _HomeScreenState extends State<HomeScreen> {
       // Botón flotante para conectar/desconectar Bluetooth
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: _bleService.isConnected,
-        builder: (context, connected, child) {
+        builder: (BuildContext context, bool connected, Widget? child) {
           return FloatingActionButton.extended(
             onPressed: connected
-                ? _bleService
-                      .disconnect // Desconectar si está conectado
+                ? () async {
+                    // Desconectar si está conectado
+                    await _bleService.disconnect();
+                    // Mostrar mensaje de desconexión
+                    // Verificar mounting antes de usar el contexto
+                    if (mounted) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('🔌 Desconectado del dispositivo'),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
                 : _showConnectionSheet, // Mostrar hoja de conexión si no está conectado
             icon: Icon(
               connected ? Icons.power_settings_new : Icons.bluetooth_searching,
